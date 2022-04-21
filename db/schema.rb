@@ -11,7 +11,6 @@
 # It's strongly recommended that you check this file into your version control system.
 
 ActiveRecord::Schema.define(version: 2022_04_21_145232) do
-
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -137,12 +136,9 @@ ActiveRecord::Schema.define(version: 2022_04_21_145232) do
     t.text "text_ciphertext"
     t.boolean "is_read", default: false, null: false
     t.boolean "sent_to_supporters", default: false
-<<<<<<< HEAD
     t.text "last_message_text_ciphertext"
-=======
     t.bigint "chat_id"
     t.index ["chat_id"], name: "index_messages_on_chat_id"
->>>>>>> 72ccbf85 (Associate chat with message model)
     t.index ["receiver_id"], name: "index_messages_on_receiver_id"
     t.index ["sender_id"], name: "index_messages_on_sender_id"
   end
