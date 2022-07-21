@@ -23,11 +23,12 @@ import SocialRow from "./Show/SocialRow";
 
 import Button from "src/components/design_system/button";
 import { Chat } from "src/components/icons";
-import { H2, H5, P3 } from "src/components/design_system/typography";
+import { P3, H4, P2 } from "src/components/design_system/typography";
 import Tooltip from "src/components/design_system/tooltip";
 
 import ThemeContainer, { ThemeContext } from "src/contexts/ThemeContext";
 import cx from "classnames";
+import Verified from "../icons/Verified";
 
 const TalentShow = ({
   admin,
@@ -46,6 +47,7 @@ const TalentShow = ({
   posts,
   isFollowing,
   followersCount,
+  supportersCount,
   railsContext,
 }) => {
   const url = new URL(window.location);
@@ -103,6 +105,7 @@ const TalentShow = ({
         setSharedState((prev) => ({
           ...prev,
           isFollowing: false,
+          followersCount: sharedState.followersCount - 1,
         }));
       }
     } else {
@@ -114,6 +117,7 @@ const TalentShow = ({
         setSharedState((prev) => ({
           ...prev,
           isFollowing: true,
+          followersCount: sharedState.followersCount + 1,
         }));
       }
     }
@@ -139,6 +143,33 @@ const TalentShow = ({
       setSharedState((prev) => ({
         ...prev,
         user: { ...prev.user, profile_type: "approved" },
+      }));
+
+      return true;
+    }
+  };
+
+  const verifyTalent = async () => {
+    const params = {
+      talent: {
+        verified: true,
+      },
+      user: {
+        id: sharedState.user.id,
+      },
+    };
+
+    const response = await patch(
+      `/api/v1/talent/${sharedState.talent.id}`,
+      params
+    ).catch(() => {
+      return false;
+    });
+
+    if (response && !response.error) {
+      setSharedState((prev) => ({
+        ...prev,
+        talent: { ...prev.talent, verified: true },
       }));
 
       return true;
@@ -177,6 +208,18 @@ const TalentShow = ({
 
   const actionButtons = () => (
     <div className="d-flex flex-row flex-wrap flex-lg-nowrap justify-content-center justify-content-lg-start align-items-center mt-4 mt-lg-5 lg-w-100 lg-width-reset">
+      {sharedState.admin && !sharedState.talent.verified && (
+        <Button
+          onClick={() => verifyTalent()}
+          type="primary-default"
+          className="mr-2"
+        >
+          <>
+            Verify
+            <Verified className="ml-1" fill="#FFFFFF" />
+          </>
+        </Button>
+      )}
       {sharedState.admin &&
       sharedState.user.profile_type == "waiting_for_approval" ? (
         <Button
@@ -206,9 +249,9 @@ const TalentShow = ({
           talentUserId={talent.user_id}
           talentName={displayName({ withLink: false })}
           ticker={ticker()}
-          railsContext={railsContext}
           mode={theme.mode()}
           talentIsFromCurrentUser={talentIsFromCurrentUser}
+          railsContext={railsContext}
         />
       )}
       {!talentIsFromCurrentUser && (
@@ -232,9 +275,19 @@ const TalentShow = ({
           className={cx(talentIsFromCurrentUser && "mr-2")}
         >
           {sharedState.isFollowing ? (
-            <><FontAwesomeIcon icon={faStar} className="text-warning" /><span> &nbsp; Starred&nbsp; &nbsp;</span><span class="badge bg-light rounded-pill visually-hidden">{22}</span></>
+            <>
+              <FontAwesomeIcon icon={faStar} className="text-warning" />
+              <span className="badge ml-2 rounded-circle bg-light visually-hidden">
+                {sharedState.followersCount}
+              </span>
+            </>
           ) : (
-            <><FontAwesomeIcon icon={faStarOutline} className="icon-bar" /> &nbsp;<span class="badge bg-light rounded-pill visually-hidden">0</span> </>
+            <>
+              <FontAwesomeIcon icon={faStarOutline} className="icon-bar" />
+              <span className="badge ml-2 rounded-circle bg-light visually-hidden">
+                {sharedState.followersCount}
+              </span>
+            </>
           )}
         </Button>
       )
@@ -410,21 +463,26 @@ const TalentShow = ({
           </div>
           <div className={cx("d-flex flex-column", !mobile && "ml-5")}>
             <div className="d-flex flex-row flex-wrap align-items-center justify-content-start mt-3 mt-lg-0">
-              <H2
+              <H4
                 mode={theme.mode()}
                 text={displayName({ withLink: false })}
                 bold
                 className="mr-2 text-break"
               />
+              {sharedState.talent.verified && (
+                <Verified
+                  className="mr-4"
+                  fill={theme.mode() == "light" ? "#9fa3a9" : "#ccced1"}
+                />
+              )}
               {ticker() != "" && (
-                <H2 bold text={`$${ticker()}`} className="text-primary-04" />
+                <H4 text={`$${ticker()}`} className="text-primary-04" />
               )}
             </div>
             <div className="d-flex flex-row mb-lg-2 align-items-center pr-3">
-              <H5
-                bold
+              <P2
                 text={sharedState.talent.profile.occupation}
-                className="mb-2 mb-lg-0 text-primary-04"
+                className="mb-2 mb-lg-0 text-primary-01"
               />
               {!mobile && <SocialRow profile={sharedState.talent.profile} />}
             </div>
@@ -528,6 +586,7 @@ const TalentShow = ({
               ticker={ticker()}
               token={token}
               mode={theme.mode()}
+              supportersCount={supportersCount}
               railsContext={railsContext}
             />
           </div>

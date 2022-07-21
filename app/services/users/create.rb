@@ -16,16 +16,18 @@ module Users
         create_investor(user)
         create_feed(user)
         give_reward_to_inviter(invite) if invite
+        create_talent(user)
+        create_token(user)
 
         if invite&.talent_invite?
-          create_talent(user)
-          create_token(user)
           update_profile_type(user)
           upsert_discovery_row(invite, user) if invite.partnership.present?
         end
 
         create_invite(user)
         create_tasks(user)
+
+        UserMailer.with(user: user).send_welcome_email.deliver_later(wait: 5.seconds)
 
         @result[:user] = user
         @result[:success] = true
