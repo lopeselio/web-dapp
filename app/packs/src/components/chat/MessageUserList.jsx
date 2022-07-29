@@ -114,7 +114,6 @@ const MessageUserList = ({
   const [showNewMessageModal, setShowNewMessageModal] = useState(false);
   const [showNewMessageToAllSupporters, setShowNewMessageToAllSupporters] =
     useState(false);
-
   const onNewMessageUser = (user) => {
     onClick(user.id);
     const index = users.findIndex((u) => u.id == user.id);
@@ -129,7 +128,48 @@ const MessageUserList = ({
     setShowNewMessageToAllSupporters(true);
   };
 
+  const [currentPage, setCurrentPage] = useState(1); // current page hook
+  const [chatsPerPage] = useState(2); // chats per page, set at 2
+  const [chats, setChats] = useState([]); // chats
+  // get current chats
+  const indexOfLastChat = currentPage * chatsPerPage;
+  const indexOfFirstChat = indexOfLastChat - chatsPerPage;
+
   const sortedUsers = users.sort(sortUsers);
+  const currentChats = sortedUsers.slice(indexOfFirstChat, indexOfLastChat);
+
+  // Load more chats
+  const paginate = pageNumber => setCurrentPage(pageNumber);
+
+  // pagination component for chats
+  const Pagination = ({ chatsPerPage, totalChats, paginate }) => {
+    const pageNumbers = [];
+    for (let i = 1; i <= Math.ceil(totalChats/chatsPerPage); i++) {
+      pageNumbers.push(i);
+    }
+    return (
+      <nav>
+        <ul className='pagination'>
+          {pageNumbers.map(number => (
+            <li key={number} className='page-item'>
+              <a onClick={() => paginate(number)} href={`/chats?page=${number}&per_page=${chatsPerPage}`} className='page-link'>
+                {number}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    );
+  }
+
+  useEffect(() => {
+    const fetchChats = () => {
+      setChats[sortedUsers];
+      console.log(users);
+    }
+    fetchChats();
+  }, [])
+
   return (
     <>
       <NewMessageModal
@@ -174,7 +214,8 @@ const MessageUserList = ({
         </div>
         {sortedUsers.length == 0 && <EmptyUsers mode={mode} />}
         <div className="w-100 d-flex flex-column lg-overflow-y-auto">
-          {filteredUsers(sortedUsers, search).map((user) => (
+          {/* {filteredUsers(sortedUsers, search).map((user) => ( //old code   */}
+          {filteredUsers(currentChats, search).map((user) => (
             <UserMessage
               onClick={onClick}
               key={`user-message-list-${user.id}`}
@@ -183,6 +224,13 @@ const MessageUserList = ({
               mode={mode}
             />
           ))}
+        </div>
+        <div className="w-100 d-flex flex-column lg-overflow-y-auto">
+          <Pagination
+            chatsPerPage={chatsPerPage}
+            totalChats={sortedUsers.length}
+            paginate={paginate}
+          />
         </div>
       </div>
     </>
